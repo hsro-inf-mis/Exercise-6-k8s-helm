@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "icndb.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "icndb.name" . }}
+    helm.sh/chart: {{ include "icndb.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "icndb.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
