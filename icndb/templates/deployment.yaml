@@ -1,4 +1,4 @@
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "icndb.fullname" . }}
@@ -21,31 +21,62 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.icndb.image.repository -}}:{{- .Values.icndb.image.tag }}"
+          imagePullPolicy: {{ .Values.icndb.image.pullPolicy }}
+          env:
+            - name: VERTICLES_COUNT
+              value: {{ .Values.icndb.verticlesCount | quote }}
+            - name: JDBC_HOSTNAME
+              value: localhost
+            - name: JDBC_DATABASE
+              value: jericho
+            - name: JDBC_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "icndb.fullname" . -}}-jdbc-secret
+                  key: JDBC_USERNAME
+            - name: JDBC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "icndb.fullname" . -}}-jdbc-secret
+                  key: JDBC_PASSWORD
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
               protocol: TCP
           livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 10
             httpGet:
-              path: /
+              path: /api/v1/jokes/random
               port: http
           readinessProbe:
+            initialDelaySeconds: 60
+            periodSeconds: 1
+            timeoutSeconds: 1
+            failureThreshold: 3
             httpGet:
-              path: /
+              path: /api/v1/jokes/random
               port: http
           resources:
-{{ toYaml .Values.resources | indent 12 }}
-    {{- with .Values.nodeSelector }}
-      nodeSelector:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.affinity }}
-      affinity:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
-      tolerations:
-{{ toYaml . | indent 8 }}
-    {{- end }}
+{{ toYaml .Values.icndb.resources | indent 12 }}
+        - name: postgres
+          image: "{{ .Values.db.image.repository -}}:{{- .Values.db.image.tag }}"
+          imagePullPolicy: {{ .Values.db.image.pullPolicy }}
+          env:
+            - name: POSTGRES_DB
+              value: 'jericho'
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "icndb.fullname" . -}}-jdbc-secret
+                  key: JDBC_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "icndb.fullname" . -}}-jdbc-secret
+                  key: JDBC_PASSWORD
+          resources:
+{{ toYaml .Values.db.resources | indent 12 }}
