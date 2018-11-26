@@ -1,1 +1,4 @@
+# To ignore cached charts
+*.tgz
+
 **/.vscode/

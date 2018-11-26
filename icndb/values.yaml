@@ -6,20 +6,21 @@ replicaCount: 1
 
 icndb:
   verticlesCount: 4
-  image:
-    repository: baez90/jericho-victim
-    tag: latest
-    pullPolicy: Always
-  resources: {}
 
-db:
-  username: 'jericho'
-  password: 'W@c[3~DV>~:]4%+5"'
-  image:
-    repository: postgres
-    tag: 11.1-alpine
-    pullPolicy: IfNotPresent
-  resources: {}
+image:
+  repository: baez90/jericho-victim
+  tag: latest
+  pullPolicy: Always
+resources: {}
+
+postgresql:
+  postgresqlUsername: jericho
+  postgresqlPassword: 'W@c[3~DV>~:]4%+5"'
+  postgresqlDatabase: jericho
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
 
 nameOverride: ""
 fullnameOverride: ""
